@@ -1,31 +1,124 @@
-# Clash Verge Rev / Mihomo 链式代理示例配置片段
-proxies:
-  # 1. 你的前置节点（通常是你的机场已有节点，例如 SOCKS5、Shadowsocks、VMess 等）
-  - name: "🇺🇸 机场前置节点"
-    type: socks5
-    server: your-airport-server.com
-    port: 443
-    # 若有认证信息请在此填写：
-    # username: "your-username"
-    # password: "your-password"
+# Clash Verge Rev / Mihomo 多前置高可用集群配置示例
+port: 7890
+socks-port: 7891
+allow-lan: false
+mode: rule
+log-level: info
 
-  # 2. GCP 链式落地节点（使用 dialer-proxy 挂靠在前置节点后）
-  - name: "🚀 GCP-链式加速落地"
+proxies:
+  # === 1. 机场前置节点池（可添加多个不同区域前置） ===
+  - name: '🇺🇸 美国硅谷前置'
+    type: socks5
+    server: your-airport-sv.com
+    port: 443
+    tls: true
+    username: your-username
+    password: your-password
+
+  - name: '🇺🇸 美国硅谷3'
+    type: http
+    server: your-airport-sv3.com
+    port: 443
+    tls: true
+    username: your-username
+    password: your-password
+
+  - name: '🇺🇸 美国洛杉矶2'
+    type: http
+    server: your-airport-la2.com
+    port: 443
+    tls: true
+    username: your-username
+    password: your-password
+
+  - name: '🇯🇵 日本前置'
+    type: http
+    server: your-airport-jp.com
+    port: 443
+    tls: true
+    username: your-username
+    password: your-password
+
+  # === 2. GCP 链式落地节点（分别挂接不同前置） ===
+  - name: '🚀 GCP-(经硅谷专线)'
     type: vmess
-    server: 35.212.xxx.xxx      # 替换为你的 GCP 外部 IP
+    server: 35.212.xxx.xxx
     port: 8443
-    uuid: your-uuid-here        # 替换为你的 Xray UUID
+    uuid: your-uuid-here
     alterId: 0
     cipher: auto
     network: ws
-    ws-opts:
-      path: /gcp-ws
-    dialer-proxy: "🇺🇸 机场前置节点" # 核心：指定流量先经前置节点
+    ws-opts: { path: /gcp-ws }
+    dialer-proxy: '🇺🇸 美国硅谷前置'
+
+  - name: '🚀 GCP-(经硅谷3)'
+    type: vmess
+    server: 35.212.xxx.xxx
+    port: 8443
+    uuid: your-uuid-here
+    alterId: 0
+    cipher: auto
+    network: ws
+    ws-opts: { path: /gcp-ws }
+    dialer-proxy: '🇺🇸 美国硅谷3'
+
+  - name: '🚀 GCP-(经洛杉矶2)'
+    type: vmess
+    server: 35.212.xxx.xxx
+    port: 8443
+    uuid: your-uuid-here
+    alterId: 0
+    cipher: auto
+    network: ws
+    ws-opts: { path: /gcp-ws }
+    dialer-proxy: '🇺🇸 美国洛杉矶2'
+
+  - name: '🚀 GCP-(经日本)'
+    type: vmess
+    server: 35.212.xxx.xxx
+    port: 8443
+    uuid: your-uuid-here
+    alterId: 0
+    cipher: auto
+    network: ws
+    ws-opts: { path: /gcp-ws }
+    dialer-proxy: '🇯🇵 日本前置'
 
 proxy-groups:
-  - name: "PROXIES"
+  # 主控制策略组（支持手动切换）
+  - name: 'PROXIES'
     type: select
     proxies:
-      - "🚀 GCP-链式加速落地"
-      - "🇺🇸 机场前置节点"
+      - '⚡ GCP-自动优选'
+      - '🛡️ GCP-故障转移'
+      - '🚀 GCP-(经硅谷专线)'
+      - '🚀 GCP-(经硅谷3)'
+      - '🚀 GCP-(经洛杉矶2)'
+      - '🚀 GCP-(经日本)'
       - DIRECT
+
+  # 策略组 1：自动测速优选（哪条前置低延迟就自动走哪条）
+  - name: '⚡ GCP-自动优选'
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 180
+    tolerance: 50
+    proxies:
+      - '🚀 GCP-(经硅谷专线)'
+      - '🚀 GCP-(经硅谷3)'
+      - '🚀 GCP-(经洛杉矶2)'
+      - '🚀 GCP-(经日本)'
+
+  # 策略组 2：故障转移（主力前置故障自动切备用）
+  - name: '🛡️ GCP-故障转移'
+    type: fallback
+    url: http://www.gstatic.com/generate_204
+    interval: 120
+    proxies:
+      - '🚀 GCP-(经硅谷专线)'
+      - '🚀 GCP-(经硅谷3)'
+      - '🚀 GCP-(经洛杉矶2)'
+      - '🚀 GCP-(经日本)'
+
+rules:
+  - MATCH,PROXIES
