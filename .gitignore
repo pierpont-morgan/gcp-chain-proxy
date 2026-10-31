@@ -1,0 +1,12 @@
+# 敏感信息忽略（防止泄露个人机场订阅和私钥）
+*.yaml
+*.txt
+*.py
+*.sh
+!setup_vmess_template.sh
+!example-clash.yaml
+
+# 系统与缓存
+.DS_Store
+Thumbs.db
+*.log

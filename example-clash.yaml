@@ -1,0 +1,31 @@
+# Clash Verge Rev / Mihomo 链式代理示例配置片段
+proxies:
+  # 1. 你的前置节点（通常是你的机场已有节点，例如 SOCKS5、Shadowsocks、VMess 等）
+  - name: "🇺🇸 机场前置节点"
+    type: socks5
+    server: your-airport-server.com
+    port: 443
+    # 若有认证信息请在此填写：
+    # username: "your-username"
+    # password: "your-password"
+
+  # 2. GCP 链式落地节点（使用 dialer-proxy 挂靠在前置节点后）
+  - name: "🚀 GCP-链式加速落地"
+    type: vmess
+    server: 35.212.xxx.xxx      # 替换为你的 GCP 外部 IP
+    port: 8443
+    uuid: your-uuid-here        # 替换为你的 Xray UUID
+    alterId: 0
+    cipher: auto
+    network: ws
+    ws-opts:
+      path: /gcp-ws
+    dialer-proxy: "🇺🇸 机场前置节点" # 核心：指定流量先经前置节点
+
+proxy-groups:
+  - name: "PROXIES"
+    type: select
+    proxies:
+      - "🚀 GCP-链式加速落地"
+      - "🇺🇸 机场前置节点"
+      - DIRECT
