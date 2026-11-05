@@ -209,6 +209,19 @@ rules:
 ```
 同时在家里路由器后台开启 **UPnP** 或映射 UDP `41641`，即可让手机在外部 4G/5G 下也能直连家里电脑，实现“内网直达 + 外网极速原生出口”二合一！
 
+> 💡 **配套 AI 提示词**：想要让 AI 自动帮你排查系统设置与注入规则？请直接使用：[Tailscale 出口节点与 Clash 冲突修复 AI Prompt (TAILSCALE_PROMPT.md)](TAILSCALE_PROMPT.md)。
+
+---
+
+## 🤖 进阶配套：AI 自动化配置提示词库 (Prompt Hub)
+
+本仓库提供开箱即用、经过反复实测踩坑验证的系统级 AI 提示词，可直接复制给任何 AI 助手（ChatGPT / Claude / Cursor / Antigravity 等）全自动执行：
+
+* **[Tailscale 出口节点与 Clash TUN 冲突修复 AI Prompt](TAILSCALE_PROMPT.md)**  
+  解决 `UDP: false` 探测被劫持、DERP 慢速中继降级，打通移动端与家庭跳板网络。
+* **[Hermes Agent 配置 GPT 模型与原生生图避坑指南 AI Prompt](HERMES_GPT_PROMPT.md)**  
+  无缝复用 ChatGPT Plus (Codex) 订阅驱动 Hermes，开启官方原生云端生图（零显存占用、无需部署 ComfyUI、无需付费 API Key），彻底规避 Windows 桌面端 `[Image blocked]` 本地路径拦截大坑。
+
 ---
 
 ## ❓ 常见问答 FAQ
