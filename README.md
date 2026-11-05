@@ -183,6 +183,34 @@ proxies:
 
 ---
 
+### 4. 进阶玩法：Tailscale 出口节点 + Clash 联动（拯救安卓单 VPN 冲突）
+
+许多小伙伴在安卓手机上遇到一个痛点：**安卓系统只允许一个 VPN 生效**，开了 Tailscale 连家里内网，就无法开代理翻墙；开了代理就断了内网。
+
+**终极解法**：把家里常开的 Windows/Mac 电脑设为 Tailscale 出口节点（Exit Node），手机在外只需开一个 Tailscale 连回电脑，电脑再通过 Clash 链式代理出海！
+
+#### 避坑核心：解决 `UDP: false` 导致的 600ms 中继慢速
+当 Clash Verge 开启 TUN 模式时，会默认拦截 Tailscale 的 STUN 探测包，导致 Tailscale 判定自身无 UDP 能力，被迫降级走拥堵的香港公共中继（DERP relay）。
+
+**解决办法**：在 Clash 配置文件的 `rules:` 顶部加入放行白名单，并保持 **`[ 规则 ]`** 模式：
+```yaml
+rules:
+  # 1. 放行局域网
+  - GEOIP,LAN,DIRECT,no-resolve
+
+  # 2. 放行 Tailscale 进程与 WireGuard 端口（保障 P2P 穿透打洞）
+  - PROCESS-NAME,tailscaled.exe,DIRECT
+  - PROCESS-NAME,tailscale-ipn.exe,DIRECT
+  - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+  - DST-PORT,41641,DIRECT
+
+  # 3. 兜底所有外网走固定 GCP 链式出口
+  - MATCH,PROXIES
+```
+同时在家里路由器后台开启 **UPnP** 或映射 UDP `41641`，即可让手机在外部 4G/5G 下也能直连家里电脑，实现“内网直达 + 外网极速原生出口”二合一！
+
+---
+
 ## ❓ 常见问答 FAQ
 
 **Q：前置代理选 SOCKS5 还是 HTTP？**  
